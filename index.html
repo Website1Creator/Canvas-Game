@@ -4,8 +4,20 @@
         img {
             display: none;
         }
+        scoreL {
+            position: fixed;
+            margin-top: 5px;
+            margin-left: 10px;
+        }
+        scoreR {
+            position: fixed;
+            margin-top: 5px;
+            margin-left: 0px;
+            width: 20px;
+        }
         body {
             margin: 0;
+            overflow: hidden;
         }
     </style>
     <title>Life Road</title>
@@ -14,7 +26,8 @@
 <img src="images/Bot1.png" id=Player1 />
 <img src="images/Bot2.png" id=Player2 />
 <body>
-    <score>0</score>
+    <scoreL>0</scoreL>
+    <scoreR>0</scoreR>
     <canvas id=canvas1></canvas>
     <script src="script.js"></script>
 </body>

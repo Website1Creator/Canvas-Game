@@ -12,9 +12,7 @@ bullets = []
 enemies = []
 scoreLeft = 0
 scoreRight = 0
-enemyX = 100
-enemyY = 100
-enemyAngle = 0
+enemyTimer = 0
 //Get score element
 scoreL = document.querySelector('scoreL')
 scoreR = document.querySelector('scoreR')
@@ -46,6 +44,32 @@ class Bullet {
         this.draw()
         this.x = this.x + this.velocity.x
         this.y = this.y + this.velocity.y
+    }
+}
+
+class Enemy {
+    constructor(v, x, y, ctx, angle, pl1) {
+        this.velocity = v
+        this.ctx = ctx
+        this.size = 25
+        this.x = x
+        this.y = y
+        this.angle = angle
+        this.enemy = pl1
+    }
+    draw () {
+        this.ctx.save()
+        this.ctx.translate(this.x + (this.size / 2), this.y + (this.size / 2))
+        this.ctx.rotate(this.angle)
+        this.ctx.translate(-(this.x + (this.size / 2)), -(this.y + (this.size / 2)))
+        this.ctx.drawImage(this.enemy, this.x, this.y, this.size, this.size)
+        this.ctx.rotate(this.angle)
+        this.ctx.restore()
+    }
+    update () {
+        this.draw()
+        // this.x = this.x + this.velocity.x
+        // this.y = this.y + this.velocity.y
     }
 }
 
@@ -138,68 +162,6 @@ class player1 {
         if(this.y < 0) this.y = 0
         if(this.y > this.sh - this.pSize) this.y = this.sh - this.pSize
     }
-}
-
-class enemies1 {
-    constructor(ctx, pl1, x, y, ang, vel) {
-        this.angle = ang
-        this.ctx = ctx
-        this.pl1 = pl1
-        this.x = x
-        this.y = y
-        this.size = 25
-        this.vel = vel
-    }
-    draw () {
-        this.ctx.save()
-        this.ctx.translate(this.x + (this.size / 2), this.y + (this.size / 2))
-        this.ctx.rotate(this.angle)
-        this.ctx.translate(-(this.x + (this.size / 2)), -(this.y + (this.size / 2)))
-        this.ctx.drawImage(this.pl1, this.x, this.y, this.size, this.size)
-        this.ctx.rotate(this.angle)
-        this.ctx.restore()
-    }
-    update () {
-        this.draw()
-        this.x = this.x + this.vel.x
-        this.y = this.y + this.vel.y
-    }
-}
-
-function enemyController(ctx, Player1, enemies, playerOne) {
-    setInterval(() => {
-        
-        let x
-        let y
-
-        if (Math.random() < 0.5) {
-            x = Math.random() < 0.5 ? 0 - 17.5 : canvas.width / 2 - 25
-            y = Math.random() * canvas.height
-        } else {
-            x = Math.random() * canvas.width / 2
-            y = Math.random() < 0.5 ? 0 - 17.5 : canvas.height + 17.5
-        } 
-        const angle = Math.atan2(
-            playerOne.x - y,
-            playerOne.y - x
-        )
-        const velocity = {
-            x: Math.cos(angle),
-            y: Math.sin(angle)
-        }
-        console.log('fuck')
-        enemies.push(new enemies1(ctx, Player1, x, y, angle * 57.2958, velocity))
-    }, 1000)
-
-    enemies.forEach((enemies1, index) => {
-        enemies1.update()
-
-        // if () {
-        //     setTimeout(() => {
-        //         enemies.splice(index, 1)
-        //     }, 0)
-        // }
-    })
 }
 
 //Get Inputs
@@ -295,7 +257,6 @@ class UI {
 playerOne = new player1(pSize, Player1, ctx, widthQuarter, innerHeight, widthCenter, heightCenter, playerMov)
 new inputs(playerOne)//Add Player Two
 //For Left Canvas
-enemiesOne = new enemies1(ctx, Player1)
 ui = new UI(ctx, innerHeight, widthQuarter, widthCenter, innerWidth)
 
 function Bullets(bullets, wc, sh) {
@@ -310,22 +271,47 @@ function Bullets(bullets, wc, sh) {
     })
 }
 
+function enemyController(ctx, enemyTimer, enemies, Player1) {
+    if(enemyTimer >= 1) {
+        v = {x:1, y:1}
+        x = 100
+        y = 100
+        angle = 6
+        enemies.push(new Enemy(v, x, y, ctx, angle, Player1))
+
+        enemies.forEach((enemy, index) => {
+            enemy.update()
+    
+            // //calculate distance btwn enemy and bullet
+            // const dist = Math.hypot(player.x - Enemy.x, player.y - enemy.y)
+            // //Die
+            // if (dist - Enemy.radius - player.radius < 1) {
+            //     cancelAnimationFrame(animationId)
+            //     modalEl.style.display = 'flex'
+            //     bigScoreEl.innerHTML = score
+            })
+    }
+}
+
 //Game Loop
 let lastTime = 0
 function gameLoop(timestamp) {
-    let deltaTime = timestamp - lastTime
-    lastTime = timestamp
-
-    ctx.clearRect(0, 0, innerWidth, innerHeight)
-    playerOne.update(deltaTime)
-    // playermove2.update(deltaTime)
+    let deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+    enemyTimer = enemyTimer + 0.002
+    enemyController(ctx, enemyTimer, enemies, Player1)
+    if(enemyTimer > 1) {
+        enemyTimer = 0
+        console.log(enemies)
+    }
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    playerOne.update(deltaTime);
+    // playermove2.update(deltaTime);
     ui.centerLine()
-    enemiesOne.draw()
     Bullets(bullets, widthCenter, innerHeight)
-    enemyController(ctx, Player1, enemies, playerOne)
     scoreL.innerHTML = scoreLeft
     scoreR.innerHTML = scoreRight
-    requestAnimationFrame(gameLoop)
+    requestAnimationFrame(gameLoop);
 }
 
-requestAnimationFrame(gameLoop)
+requestAnimationFrame(gameLoop);
