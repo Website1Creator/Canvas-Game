@@ -7,14 +7,11 @@ const widthCenter = canvas.width / 2
 const heightCenter = canvas.height / 2
 const widthQuarter = canvas.width / 4
 var pSize = canvas.height / 20
-var playerMov = {x:0, y:0}
-bullets = []
-enemies = []
-scoreLeft = 0
-scoreRight = 0
-enemyX = 100
-enemyY = 100
-enemyAngle = 0
+var playerMov1 = {x:0, y:0}
+var playerMov2 = {x:0, y:0}
+bullets1 = []
+enemiesO = []
+enemyTimer = 0
 //Get score element
 scoreL = document.querySelector('scoreL')
 scoreR = document.querySelector('scoreR')
@@ -23,10 +20,22 @@ document.querySelector('scoreR').style.marginLeft = width
 
 //Create Players
 var Player1 = document.getElementById("Player1")
-Player2 = document.getElementById("Player2")
+var Player2 = document.getElementById("Player2")
 ctx.drawImage(Player2, (widthQuarter * 3) - 25, heightCenter, 50, 100)
 
-class Bullet {
+class game {
+    constructor(scoreL, scoreR) {
+        this.scoreLeft = 0
+        this.scoreRight = 0
+        this.scoreL = scoreL
+        this.scoreR = scoreR
+    }
+    scoreLeftAdd () {
+        this.scoreLeft += 25
+        this.scoreL.innerHTML = this.scoreLeft
+    }
+}
+class bullet1 {
     constructor(v, sx, sy, c, ctx, pSize) {
         this.velocity = v
         this.color = c
@@ -51,8 +60,8 @@ class Bullet {
 
 //In Charge Of Player 1
 class player1 {
-    constructor(pSize, pl1, ctx, wq, sh, wc, hc, playerMov) {
-        this.playerMov = playerMov
+    constructor(pSize, pl1, ctx, wq, sh, wc, hc, playerMov1) {
+        this.playerMov1 = playerMov1
         this.sh = sh
         this.wc = wc
         this.hc = hc
@@ -68,16 +77,16 @@ class player1 {
         this.fired = 0
     }
     moveLeft() {
-        this.playerMov.x = -2
+        this.playerMov1.x = -2
     }
     moveRight() {
-        this.playerMov.x = 2
+        this.playerMov1.x = 2
     }
     moveForward() {
-        this.playerMov.y = -2
+        this.playerMov1.y = -2
     }
     moveBackward() {
-        this.playerMov.y = 2
+        this.playerMov1.y = 2
     }
     rotateR() {
         this.angleX= 0.1
@@ -86,10 +95,10 @@ class player1 {
         this.angleX = -0.1
     }
     stopX() {
-        this.playerMov.x = 0
+        this.playerMov1.x = 0
     }
     stopY() {
-        this.playerMov.y = 0
+        this.playerMov1.y = 0
     }
     stopR() {
         this.angleX = 0
@@ -103,12 +112,12 @@ class player1 {
         if (this.fired == 0) {
             this.fired = 1
             this.velocity = {
-                x: Math.cos(this.angle - 1.55) * 5,
-                y: Math.sin(this.angle - 1.55) * 5
+                x: Math.cos(this.angle - 1.55),
+                y: Math.sin(this.angle - 1.55)
             }
             this.c = 'blue'
 
-            bullets.push(new Bullet(this.velocity, this.x, this.y, this.c, this.ctx, this.pSize))
+            bullets1.push(new bullet1(this.velocity, this.x, this.y, this.c, this.ctx, this.pSize))
         }
     }
     //Draw character and rotate
@@ -131,8 +140,8 @@ class player1 {
         if(this.angle < 0) {
             this.angle = 6
         }
-        this.x = this.x + this.playerMov.x
-        this.y = this.y + this.playerMov.y
+        this.x = this.x + this.playerMov1.x
+        this.y = this.y + this.playerMov1.y
         if(this.x > this.wc - this.pSize) this.x = this.wc - this.pSize
         if(this.x < 0) this.x = 0
         if(this.y < 0) this.y = 0
@@ -140,99 +149,234 @@ class player1 {
     }
 }
 
+class player2 {
+    constructor(pSize, pl2, ctx, wq, sh, wc, hc, playerMov2) {
+        this.playerMov2 = playerMov2
+        this.sh = sh
+        this.wc = wc
+        this.hc = hc
+        this.wq = wq
+        this.x = wc + wq - 25
+        this.y = hc
+        this.ctx = ctx
+        this.pl2 = pl2
+        this.pSize = pSize
+        this.angle = 0
+        this.angleX = 0
+        this.sw = this.wc * 2
+        this.fired = 0
+    }
+    moveLeft() {
+        this.playerMov2.x = -2
+    }
+    moveRight() {
+        this.playerMov2.x = 2
+    }
+    moveForward() {
+        this.playerMov2.y = -2
+    }
+    moveBackward() {
+        this.playerMov2.y = 2
+    }
+    rotateR() {
+        this.angleX= 0.1
+    }
+    rotateL() {
+        this.angleX = -0.1
+    }
+    stopX() {
+        this.playerMov2.x = 0
+    }
+    stopY() {
+        this.playerMov2.y = 0
+    }
+    stopR() {
+        this.angleX = 0
+    }
+    //Prevents Constant Firing while holding the fire key
+    keyup() {
+        this.fired = 0
+    }
+    //Fire Players Gun
+    fire() {
+        if (this.fired == 0) {
+            this.fired = 1
+            this.velocity = {
+                x: Math.cos(this.angle - 1.55),
+                y: Math.sin(this.angle - 1.55)
+            }
+            this.c = 'blue'
+
+            bullets1.push(new bullet1(this.velocity, this.x, this.y, this.c, this.ctx, this.pSize))
+        }
+    }
+    //Draw character and rotate
+    draw() {
+        this.ctx.save()
+        this.ctx.translate(this.x + (this.pSize / 2), this.y + (this.pSize / 2))
+        this.ctx.rotate(this.angle)
+        this.ctx.translate(-(this.x + (this.pSize / 2)), -(this.y + (this.pSize / 2)))
+        this.ctx.drawImage(this.pl2, this.x, this.y, this.pSize, this.pSize)
+        this.ctx.rotate(this.angle)
+        this.ctx.restore()
+    }
+    //Update all variables and draw
+    update() {
+        this.draw()
+        this.angle = this.angle + this.angleX
+        if(this.angle > 6) {
+            this.angle = 0
+        }
+        if(this.angle < 0) {
+            this.angle = 6
+        }
+        this.x = this.x + this.playerMov2.x
+        this.y = this.y + this.playerMov2.y
+        if(this.x > this.wc * 2 - this.pSize) this.x = this.wc * 2 - this.pSize
+        if(this.x < this.wc) this.x = this.wc
+        if(this.y < 0) this.y = 0
+        if(this.y > this.sh - this.pSize) this.y = this.sh - this.pSize
+    }
+}
+
 class enemies1 {
-    constructor(ctx, pl1, x, y, ang, vel) {
-        this.angle = ang
+    constructor(ctx, pl1, x, y, playerOne) {
+        this.angle = 0
         this.ctx = ctx
         this.pl1 = pl1
         this.x = x
         this.y = y
         this.size = 25
-        this.vel = vel
+        this.velX = 0
+        this.velY = 0
     }
     draw () {
         this.ctx.save()
         this.ctx.translate(this.x + (this.size / 2), this.y + (this.size / 2))
-        this.ctx.rotate(this.angle)
+        this.ctx.rotate(this.angle + 1.5)
         this.ctx.translate(-(this.x + (this.size / 2)), -(this.y + (this.size / 2)))
         this.ctx.drawImage(this.pl1, this.x, this.y, this.size, this.size)
-        this.ctx.rotate(this.angle)
+        this.ctx.rotate(this.angle + 1.5)
         this.ctx.restore()
     }
     update () {
+        this.angle = Math.atan2(
+            (playerOne.y + (playerOne.pSize / 4)) - this.y,
+            (playerOne.x + (playerOne.pSize / 4)) - this.x
+        )
         this.draw()
+        this.vel = {
+            x: Math.cos(this.angle),
+            y: Math.sin(this.angle)
+        }
         this.x = this.x + this.vel.x
         this.y = this.y + this.vel.y
     }
 }
 
-function enemyController(ctx, Player1, enemies, playerOne) {
-    setInterval(() => {
-        
-        let x
-        let y
+function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, wc, sh, Game, player1) {
+    x = 0
+    y = 0
+    if (Math.random() < 0.5) {
+        x = Math.random() < 0.5 ? 0 - 17.5 : canvas.width / 2 - 25
+        y = Math.random() * canvas.height
+    } else {
+        x = Math.random() * canvas.width / 2
+        y = Math.random() < 0.5 ? 0 - 17.5 : canvas.height + 17.5      
+    }
+    if(enemyTimer > 1) {
+        enemiesO.push(new enemies1(ctx, Player1, x, y, playerOne))
+    }
 
-        if (Math.random() < 0.5) {
-            x = Math.random() < 0.5 ? 0 - 17.5 : canvas.width / 2 - 25
-            y = Math.random() * canvas.height
-        } else {
-            x = Math.random() * canvas.width / 2
-            y = Math.random() < 0.5 ? 0 - 17.5 : canvas.height + 17.5
-        } 
-        const angle = Math.atan2(
-            playerOne.x - y,
-            playerOne.y - x
-        )
-        const velocity = {
-            x: Math.cos(angle),
-            y: Math.sin(angle)
-        }
-        console.log('fuck')
-        enemies.push(new enemies1(ctx, Player1, x, y, angle * 57.2958, velocity))
-    }, 1000)
-
-    enemies.forEach((enemies1, index) => {
+    enemiesO.forEach((enemies1, enemyIndex) => {
         enemies1.update()
-
-        // if () {
-        //     setTimeout(() => {
-        //         enemies.splice(index, 1)
-        //     }, 0)
-        // }
+        
+        bullets1.forEach((bullet1, index) => {
+            bullet1.update()
+        
+            if (bullet1.x < 0 || bullet1.y < 0 || bullet1.x > wc || bullet1.y > sh) {
+                setTimeout(() => {
+                    bullets1.splice(index, 1)
+                }, 0)
+            }
+            const dist = Math.hypot(bullet1.x - enemies1.x, bullet1.y - enemies1.y)
+            if(dist - 17.5 - bullet1.radius < 1) {
+                Game.scoreLeftAdd()
+                setTimeout(() => {
+                    bullets1.splice(index, 1)
+                    enemiesO.splice(enemyIndex, 1)
+                }, 0)
+            }
+            const enemyDist = Math.hypot(playerOne.x - enemies1.x, playerOne.y - enemies1.y)
+            console.log(enemyDist)
+            if(enemyDist < 10) {
+                setTimeout(() => {
+                    enemiesO.splice(enemyIndex, 1)
+                }, 0)
+            }
+        })
     })
 }
 
 //Get Inputs
 class inputs {
-    constructor(playerMove) {
+    constructor(playerMove1, playerMove2) {
         document.addEventListener('keydown', (event) => {
             switch(event.keyCode) {
                 case 65:
-                    playerMove.moveLeft()
+                    playerMove1.moveLeft()
                     break;
  
                 case 87:
-                    playerMove.moveForward()
+                    playerMove1.moveForward()
                     break;
 
                 case 68:
-                    playerMove.moveRight()
+                    playerMove1.moveRight()
                     break;
 
                 case 83:
-                    playerMove.moveBackward()
+                    playerMove1.moveBackward()
                     break;
 
                 case 88:
-                    playerMove.fire()
+                    playerMove1.fire()
                     break;
 
                 case 67:
-                    playerMove.rotateL()
+                    playerMove1.rotateL()
                     break;
 
                 case 86:
-                    playerMove.rotateR()
+                    playerMove1.rotateR()
+                    break;
+
+                case 37:
+                    playerMove2.moveLeft()
+                    break;
+ 
+                case 38:
+                    playerMove2.moveForward()
+                    break;
+
+                case 39:
+                    playerMove2.moveRight()
+                    break;
+
+                case 40:
+                    playerMove2.moveBackward()
+                    break;
+
+                case 77:
+                    playerMove2.fire()
+                    break;
+
+                case 188:
+                    playerMove2.rotateL()
+                    break;
+
+                case 190:
+                    playerMove2.rotateR()
                     break;
                 }
         })
@@ -240,31 +384,87 @@ class inputs {
         document.addEventListener('keyup', (event) => {
             switch(event.keyCode) {
                 case 65:
-                    playerMove.stopX()
+                    playerMove1.stopX()
                     break;
  
                 case 87:
-                    playerMove.stopY()
+                    playerMove1.stopY()
                     break;
 
                 case 68:
-                    playerMove.stopX()
+                    playerMove1.stopX()
                     break;
 
                 case 83:
-                    playerMove.stopY()
+                    playerMove1.stopY()
                     break;
 
                 case 88:
-                    playerMove.keyup()
+                    playerMove1.keyup()
                     break;
 
                 case 67:
-                    playerMove.stopR()
+                    playerMove1.stopR()
                     break;
 
                 case 86:
-                    playerMove.stopR()
+                    playerMove1.stopR()
+                    break;
+
+                case 65:
+                    playerMove1.stopX()
+                    break;
+ 
+                case 87:
+                    playerMove1.stopY()
+                    break;
+
+                case 68:
+                    playerMove1.stopX()
+                    break;
+
+                case 83:
+                    playerMove1.stopY()
+                    break;
+
+                case 88:
+                    playerMove1.keyup()
+                    break;
+
+                case 67:
+                    playerMove1.stopR()
+                    break;
+
+                case 86:
+                    playerMove1.stopR()
+                    break;
+
+                case 37:
+                    playerMove2.stopX()
+                    break;
+ 
+                case 38:
+                    playerMove2.stopY()
+                    break;
+
+                case 39:
+                    playerMove2.stopX()
+                    break;
+
+                case 40:
+                    playerMove2.stopY()
+                    break;
+
+                case 77:
+                    playerMove2.keyup()
+                    break;
+
+                case 188:
+                    playerMove2.stopR()
+                    break;
+
+                case 190:
+                    playerMove2.stopR()
                     break;
                 }
         })
@@ -292,23 +492,13 @@ class UI {
 }
 
 //Make the classes and set inputs
-playerOne = new player1(pSize, Player1, ctx, widthQuarter, innerHeight, widthCenter, heightCenter, playerMov)
-new inputs(playerOne)//Add Player Two
+playerOne = new player1(pSize, Player1, ctx, widthQuarter, innerHeight, widthCenter, heightCenter, playerMov1)
+playerTwo = new player2(pSize, Player2, ctx, widthQuarter, innerHeight, widthCenter, heightCenter, playerMov2)
+new inputs(playerOne, playerTwo)
 //For Left Canvas
 enemiesOne = new enemies1(ctx, Player1)
 ui = new UI(ctx, innerHeight, widthQuarter, widthCenter, innerWidth)
-
-function Bullets(bullets, wc, sh) {
-    bullets.forEach((bullet, index) => {
-        bullet.update()
-
-        if (bullet.x < 0 || bullet.y < 0 || bullet.x > wc || bullet.y > sh) {
-            setTimeout(() => {
-                bullets.splice(index, 1)
-            }, 0)
-        }
-    })
-}
+Game = new game(scoreL, scoreR)
 
 //Game Loop
 let lastTime = 0
@@ -318,13 +508,15 @@ function gameLoop(timestamp) {
 
     ctx.clearRect(0, 0, innerWidth, innerHeight)
     playerOne.update(deltaTime)
+    playerTwo.update(deltaTime)
     // playermove2.update(deltaTime)
     ui.centerLine()
     enemiesOne.draw()
-    Bullets(bullets, widthCenter, innerHeight)
-    enemyController(ctx, Player1, enemies, playerOne)
-    scoreL.innerHTML = scoreLeft
-    scoreR.innerHTML = scoreRight
+    enemyTimer = enemyTimer + 0.02
+    enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, widthCenter, innerHeight, Game)
+    if(enemyTimer > 1) {
+        enemyTimer = 0
+    }
     requestAnimationFrame(gameLoop)
 }
 
