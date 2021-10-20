@@ -10,7 +10,9 @@ var pSize = canvas.height / 20
 var playerMov1 = {x:0, y:0}
 var playerMov2 = {x:0, y:0}
 bullets1 = []
+bullets2 = []
 enemiesO = []
+enemiesT = []
 enemyTimer = 0
 //Get score element
 scoreL = document.querySelector('scoreL')
@@ -21,21 +23,60 @@ document.querySelector('scoreR').style.marginLeft = width
 //Create Players
 var Player1 = document.getElementById("Player1")
 var Player2 = document.getElementById("Player2")
-ctx.drawImage(Player2, (widthQuarter * 3) - 25, heightCenter, 50, 100)
 
 class game {
     constructor(scoreL, scoreR) {
-        this.scoreLeft = 0
-        this.scoreRight = 0
+        this.scoreLeft = 100
+        this.scoreRight = 100
         this.scoreL = scoreL
         this.scoreR = scoreR
+        this.enemiesT = enemiesT
+        this.enemies1 = enemies1
     }
     scoreLeftAdd () {
         this.scoreLeft += 25
         this.scoreL.innerHTML = this.scoreLeft
     }
+    scoreRightAdd () {
+        this.scoreRight += 25
+        this.scoreR.innerHTML = this.scoreRight
+    }
+    scoreLeftSubtract () {
+        this.scoreLeft -= 25
+        this.scoreL.innerHTML = this.scoreLeft
+    }
+    scoreRightSubtract () {
+        this.scoreRight -= 25
+        this.scoreR.innerHTML = this.scoreRight
+    }
+    update() {
+    }
 }
+
 class bullet1 {
+    constructor(v, sx, sy, c, ctx, pSize) {
+        this.velocity = v
+        this.color = c
+        this.ctx = ctx
+        this.pSize = pSize
+        this.x = sx + (pSize / 2)
+        this.y = sy + (pSize / 2)
+        this.radius = this.pSize / 10
+    }
+    draw () {
+        this.ctx.beginPath()
+        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
+        this.ctx.fillStyle = this.color
+        this.ctx.fill()
+    }
+    update () {
+        this.draw()
+        this.x = this.x + this.velocity.x
+        this.y = this.y + this.velocity.y
+    }
+}
+
+class bullet2 {
     constructor(v, sx, sy, c, ctx, pSize) {
         this.velocity = v
         this.color = c
@@ -142,7 +183,7 @@ class player1 {
         }
         this.x = this.x + this.playerMov1.x
         this.y = this.y + this.playerMov1.y
-        if(this.x > this.wc - this.pSize) this.x = this.wc - this.pSize
+        if(this.x > this.wc * 2 - this.pSize) this.x = this.wc * 2 - this.pSize
         if(this.x < 0) this.x = 0
         if(this.y < 0) this.y = 0
         if(this.y > this.sh - this.pSize) this.y = this.sh - this.pSize
@@ -205,9 +246,9 @@ class player2 {
                 x: Math.cos(this.angle - 1.55),
                 y: Math.sin(this.angle - 1.55)
             }
-            this.c = 'blue'
+            this.c = 'red'
 
-            bullets1.push(new bullet1(this.velocity, this.x, this.y, this.c, this.ctx, this.pSize))
+            bullets2.push(new bullet2(this.velocity, this.x, this.y, this.c, this.ctx, this.pSize))
         }
     }
     //Draw character and rotate
@@ -233,14 +274,14 @@ class player2 {
         this.x = this.x + this.playerMov2.x
         this.y = this.y + this.playerMov2.y
         if(this.x > this.wc * 2 - this.pSize) this.x = this.wc * 2 - this.pSize
-        if(this.x < this.wc) this.x = this.wc
+        if(this.x < 0) this.x = 0
         if(this.y < 0) this.y = 0
         if(this.y > this.sh - this.pSize) this.y = this.sh - this.pSize
     }
 }
 
 class enemies1 {
-    constructor(ctx, pl1, x, y, playerOne) {
+    constructor(ctx, pl1, x, y) {
         this.angle = 0
         this.ctx = ctx
         this.pl1 = pl1
@@ -274,14 +315,56 @@ class enemies1 {
     }
 }
 
-function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, wc, sh, Game, player1) {
+class enemies2 {
+    constructor(ctx, pl2, x, y) {
+        this.angle = 0
+        this.ctx = ctx
+        this.pl2 = pl2
+        this.x = x
+        this.y = y
+        this.size = 25
+        this.velX = 0
+        this.velY = 0
+        this.enemyDist = 0
+        }
+    draw () {
+        this.ctx.save()
+        this.ctx.translate(this.x + (this.size / 2), this.y + (this.size / 2))
+        this.ctx.rotate(this.angle + 1.5)
+        this.ctx.translate(-(this.x + (this.size / 2)), -(this.y + (this.size / 2)))
+        this.ctx.drawImage(this.pl2, this.x, this.y, this.size, this.size)
+        this.ctx.rotate(this.angle + 1.5)
+        this.ctx.restore()
+    }
+    update () {
+        this.angle = Math.atan2(
+            (playerTwo.y + (playerTwo.pSize / 4)) - this.y,
+            (playerTwo.x + (playerTwo.pSize / 4)) - this.x
+        )
+        this.enemyDist = Math.hypot(playerTwo.x - this.x, playerTwo.y - this.y)
+            // if(enemyDist < 10) {
+            //     setTimeout(() => {
+            //         enemiesT.splice(enemyIndex, 1)
+            //     }, 0)
+            // }
+        this.draw()
+        this.vel = {
+            x: Math.cos(this.angle),
+            y: Math.sin(this.angle)
+        }
+        this.x = this.x + this.vel.x
+        this.y = this.y + this.vel.y
+    }
+}
+
+function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, wc, sh, Game) {
     x = 0
     y = 0
     if (Math.random() < 0.5) {
-        x = Math.random() < 0.5 ? 0 - 17.5 : canvas.width / 2 - 25
+        x = Math.random() < 0.5 ? 0 - 17.5 : canvas.width - 25
         y = Math.random() * canvas.height
     } else {
-        x = Math.random() * canvas.width / 2
+        x = Math.random() * canvas.width
         y = Math.random() < 0.5 ? 0 - 17.5 : canvas.height + 17.5      
     }
     if(enemyTimer > 1) {
@@ -294,7 +377,7 @@ function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets
         bullets1.forEach((bullet1, index) => {
             bullet1.update()
         
-            if (bullet1.x < 0 || bullet1.y < 0 || bullet1.x > wc || bullet1.y > sh) {
+            if (bullet1.x < 0 || bullet1.y < 0 || bullet1.x > wc * 2 || bullet1.y > sh) {
                 setTimeout(() => {
                     bullets1.splice(index, 1)
                 }, 0)
@@ -312,6 +395,43 @@ function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets
             if(enemyDist < 10) {
                 setTimeout(() => {
                     enemiesO.splice(enemyIndex, 1)
+                }, 0)
+            }
+        })
+    })
+}
+
+function enemyControllerR(ctx, Player2, enemiesT, playerTwo, enemyTimer, bullets2, wc, sh, Game) {
+    x = 0
+    y = 0
+    if (Math.random() < 0.5) {
+        x = Math.random() < 0.5 ? 0 - 17.5 : canvas.width - 25
+        y = Math.random() * canvas.height
+    } else {
+        x = Math.random() < 0.5 ? 0 - 17.5 : canvas.width - 25
+        y = Math.random() < 0.5 ? 0 - 17.5 : canvas.height + 17.5      
+    }
+    if(enemyTimer > 1) {
+        enemiesT.push(new enemies2(ctx, Player2, x, y, playerTwo))
+    }
+
+    enemiesT.forEach((enemies2, enemyIndex) => {
+        enemies2.update()
+        
+        bullets2.forEach((bullet2, index) => {
+            bullet2.update()
+        
+            if (bullet2.x < 0 || bullet2.y < 0 || bullet2.x > wc * 2 || bullet2.y > sh) {
+                setTimeout(() => {
+                    bullets2.splice(index, 1)
+                }, 0)
+            }
+            const dist = Math.hypot(bullet2.x - enemies2.x, bullet2.y - enemies2.y)
+            if(dist - 17.5 - bullet2.radius < 1) {
+                Game.scoreRightAdd()
+                setTimeout(() => {
+                    bullets2.splice(index, 1)
+                    enemiesT.splice(enemyIndex, 1)
                 }, 0)
             }
         })
@@ -481,14 +601,35 @@ class UI {
         this.sw = sw
     }
 
-    centerLine () {
-        this.ctx.strokestyle = 'black'
-        this.ctx.lineWidth = 2
-        this.ctx.beginPath()
-        this.ctx.moveTo(this.wc - 1, 0)
-        this.ctx.lineTo(this.wc - 1, this.sh)
-        this.ctx.stroke()
-    }
+    // centerLine () {
+    //     this.ctx.strokestyle = 'black'
+    //     this.ctx.lineWidth = 2
+    //     this.ctx.beginPath()
+    //     this.ctx.moveTo(this.wc - 1, 0)
+    //     this.ctx.lineTo(this.wc - 1, this.sh)
+    //     this.ctx.stroke()
+    // }
+}
+
+function deathController(enemiesO, enemiesT, playerOne, playerTwo, Game) {
+    this.enemiesO.forEach((enemies1, enemyIndex) => {
+        this.enemyDist1 = Math.hypot(playerOne.x - enemies1.x, playerOne.y - enemies1.y)
+        if(this.enemyDist1 - 17.5 < 1) {
+            Game.scoreLeftSubtract()
+            setTimeout(() => {
+                enemiesO.splice(enemyIndex, 1)
+            }, 0)
+        }
+    })
+    this.enemiesT.forEach((enemies2, enemyIndex) => {
+        this.enemyDist2 = Math.hypot(playerTwo.x - enemies2.x, playerTwo.y - enemies2.y)
+        if(this.enemyDist2 - 17.5 < 1) {
+            Game.scoreRightSubtract()
+            setTimeout(() => {
+                enemiesT.splice(enemyIndex, 1)
+            }, 0)
+        }
+    })
 }
 
 //Make the classes and set inputs
@@ -497,8 +638,9 @@ playerTwo = new player2(pSize, Player2, ctx, widthQuarter, innerHeight, widthCen
 new inputs(playerOne, playerTwo)
 //For Left Canvas
 enemiesOne = new enemies1(ctx, Player1)
+enemiesTwo = new enemies2(ctx, Player2)
 ui = new UI(ctx, innerHeight, widthQuarter, widthCenter, innerWidth)
-Game = new game(scoreL, scoreR)
+Game = new game(scoreL, scoreR, enemiesO, enemiesT, playerOne, playerTwo, enemiesOne, enemiesTwo)
 
 //Game Loop
 let lastTime = 0
@@ -509,11 +651,14 @@ function gameLoop(timestamp) {
     ctx.clearRect(0, 0, innerWidth, innerHeight)
     playerOne.update(deltaTime)
     playerTwo.update(deltaTime)
-    // playermove2.update(deltaTime)
-    ui.centerLine()
+    // ui.centerLine()
     enemiesOne.draw()
+    enemiesTwo.draw()
+    Game.update()
     enemyTimer = enemyTimer + 0.02
+    deathController(enemiesO, enemiesT, playerOne, playerTwo, Game)
     enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, widthCenter, innerHeight, Game)
+    enemyControllerR(ctx, Player2, enemiesT, playerTwo, enemyTimer, bullets2, widthCenter, innerHeight, Game)
     if(enemyTimer > 1) {
         enemyTimer = 0
     }
