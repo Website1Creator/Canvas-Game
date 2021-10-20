@@ -49,7 +49,11 @@ class game {
         this.scoreRight -= 25
         this.scoreR.innerHTML = this.scoreRight
     }
-    update() {
+    update(gameloop) {
+        if (this.scoreLeft <= 0 || this.scoreRight <= 0) {
+            cancelAnimationFrame(gameloop)
+            console.log(this.scoreLeft)
+        }
     }
 }
 
@@ -391,7 +395,6 @@ function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets
                 }, 0)
             }
             const enemyDist = Math.hypot(playerOne.x - enemies1.x, playerOne.y - enemies1.y)
-            console.log(enemyDist)
             if(enemyDist < 10) {
                 setTimeout(() => {
                     enemiesO.splice(enemyIndex, 1)
@@ -645,6 +648,7 @@ Game = new game(scoreL, scoreR, enemiesO, enemiesT, playerOne, playerTwo, enemie
 //Game Loop
 let lastTime = 0
 function gameLoop(timestamp) {
+    gameloop = requestAnimationFrame(gameLoop)
     let deltaTime = timestamp - lastTime
     lastTime = timestamp
 
@@ -654,7 +658,7 @@ function gameLoop(timestamp) {
     // ui.centerLine()
     enemiesOne.draw()
     enemiesTwo.draw()
-    Game.update()
+    Game.update(gameloop)
     enemyTimer = enemyTimer + 0.02
     deathController(enemiesO, enemiesT, playerOne, playerTwo, Game)
     enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, widthCenter, innerHeight, Game)
@@ -662,7 +666,7 @@ function gameLoop(timestamp) {
     if(enemyTimer > 1) {
         enemyTimer = 0
     }
-    requestAnimationFrame(gameLoop)
+    // requestAnimationFrame(gameLoop)
 }
 
 requestAnimationFrame(gameLoop)
