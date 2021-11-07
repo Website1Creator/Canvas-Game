@@ -15,7 +15,7 @@ bullets2 = []
 enemiesO = []
 enemiesT = []
 enemyTimer = 0
-//Get score elements
+//Get score & ui elements
 scoreL = document.querySelector('scoreL')
 scoreR = document.querySelector('scoreR')
 width = ((innerWidth - 50)) + 'px'
@@ -632,26 +632,6 @@ class inputs {
     }
 }
 
-//Decoration On Screen(Only For Left Canvas)
-class UI {
-    constructor(ctx, sh, wq, wc, sw) {
-        this.ctx = ctx
-        this.sh = sh
-        this.wq = wq
-        this.wc = wc
-        this.sw = sw
-    }
-
-    // centerLine () {
-    //     this.ctx.strokestyle = 'black'
-    //     this.ctx.lineWidth = 2
-    //     this.ctx.beginPath()
-    //     this.ctx.moveTo(this.wc - 1, 0)
-    //     this.ctx.lineTo(this.wc - 1, this.sh)
-    //     this.ctx.stroke()
-    // }
-}
-
 function deathController(enemiesO, enemiesT, playerOne, playerTwo, Game) {
     this.enemiesO.forEach((enemies1, enemyIndex) => {
         this.enemyDist1 = Math.hypot(playerOne.x - enemies1.x, playerOne.y - enemies1.y)
@@ -679,7 +659,6 @@ playerTwo = new player2(pSize, Player2, ctx, widthQuarter, innerHeight, widthCen
 //For Left Canvas
 enemiesOne = new enemies1(ctx, EnemyBlue)
 enemiesTwo = new enemies2(ctx, EnemyRed)
-ui = new UI(ctx, innerHeight, widthQuarter, widthCenter, innerWidth)
 Game = new game(scoreL, scoreR, scoreLe, scoreRe, dScreen, tex1, tex2, pause)
 new inputs(playerOne, playerTwo, Game)
 //Game Loop
