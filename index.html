@@ -44,16 +44,93 @@
             float: top;
             position: relative;
         }
+        .Death {
+            position: absolute;
+            width: 75%;
+            height: 50%;
+            background-color: darkslategrey;
+            z-index: 10;
+            top: 25%;
+            left: 12.5%;
+            border-radius: 10px;
+            display: none;
+            border: 2px solid black;
+        }
+        tex1 {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 20%;
+            text-align: center;
+            font-size: 80px;
+            display: none;
+        }
+        tex2 {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 20%;
+            text-align: center;
+            font-size: 80px;
+            display: none;
+        }
+        p1Score {
+            position: absolute;
+            left: 25%;
+            top: 50%;
+            font-size: 50px;
+        }
+        p2Score {
+            position: absolute;
+            right: 25%;
+            top: 50%;
+            font-size: 50px;
+        }
+        text1 {
+            position: absolute;
+            left: 3%;
+            top: 52%;
+            font-size: 20px;
+        }
+        text2 {
+            position: absolute;
+            right: 2%;
+            top: 52%;
+            font-size: 20px;
+        }
+        pause {
+            color: maroon;
+            position: absolute;
+            top: 25%;
+            width: 100%;
+            text-align: center;
+            font-size: 600%;
+            z-index: 200;
+            display: none;
+        }
+        restart {
+            top: 70%;
+            width: 100%;
+            left: 0;
+            text-align: center;
+            font-size: 200%;
+            position: absolute;
+        }
     </style>
     <title>Life Road</title>
     <link src="" rel="icon" />
 </head>
+<pause>PAUSED <br> Esc to resume</pause>
 <img class="Asset" src="images/Bot1.png" id=Player1 />
 <img class="Asset" src="images/Bot2.png" id=Player2 />
+<img class="Asset" src="images/virusBlue.png" id=Enemy1 />
+<img class="Asset" src="images/virusRed.png" id=Enemy2 />
 <img class="Trees" src="images/Trees.png" />
 <body>
     <scoreL>100</scoreL>
     <scoreR>100</scoreR>
-    <canvas id=canvas1><div id="timer">00</div></canvas>
+    <canvas id=canvas1></canvas>
+    <div class="Death"><text1>Left Player</text1><p1Score>0</p1Score><tex1>Player 1 Wins!</tex1><tex2>Player 2 Wins!</tex2><p2Score>0</p2Score><text2>Right Player</text2><restart>Press R To Restart</restart></div>
     <script src="script.js"></script>
 </body>
+<!-- <div id="timer">00</div> -->

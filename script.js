@@ -7,6 +7,7 @@ const widthCenter = canvas.width / 2
 const heightCenter = canvas.height / 2
 const widthQuarter = canvas.width / 4
 var pSize = canvas.height / 20
+var eSize = canvas.height / 50
 var playerMov1 = {x:0, y:0}
 var playerMov2 = {x:0, y:0}
 bullets1 = []
@@ -14,31 +15,45 @@ bullets2 = []
 enemiesO = []
 enemiesT = []
 enemyTimer = 0
-//Get score element
+//Get score elements
 scoreL = document.querySelector('scoreL')
 scoreR = document.querySelector('scoreR')
 width = ((innerWidth - 50)) + 'px'
 document.querySelector('scoreR').style.marginLeft = width
+scoreLe = document.querySelector('p1score')
+scoreRe = document.querySelector('p2score')
+dScreen = document.querySelector('.Death')
+tex1 = document.querySelector('tex1')
+tex2 = document.querySelector('tex2')
+pause = document.querySelector('pause')
 
 //Create Players
 var Player1 = document.getElementById("Player1")
 var Player2 = document.getElementById("Player2")
+//Create Enemies
+var EnemyBlue = document.getElementById("Enemy1")
+var EnemyRed = document.getElementById("Enemy2")
 
 class game {
-    constructor(scoreL, scoreR) {
+    constructor(scoreL, scoreR, scoreLe, scoreRe, dScreen, tex1, tex2, pause) {
         this.scoreLeft = 100
         this.scoreRight = 100
         this.scoreL = scoreL
         this.scoreR = scoreR
-        this.enemiesT = enemiesT
-        this.enemies1 = enemies1
+        this.scoreLe = scoreLe
+        this.scoreRe = scoreRe
+        this.dScreen = dScreen
+        this.tex1 = tex1
+        this.tex2 = tex2
+        this.Pause = pause
+        this.paused = 0
     }
     scoreLeftAdd () {
-        this.scoreLeft += 25
+        this.scoreLeft += 5
         this.scoreL.innerHTML = this.scoreLeft
     }
     scoreRightAdd () {
-        this.scoreRight += 25
+        this.scoreRight += 5
         this.scoreR.innerHTML = this.scoreRight
     }
     scoreLeftSubtract () {
@@ -49,10 +64,31 @@ class game {
         this.scoreRight -= 25
         this.scoreR.innerHTML = this.scoreRight
     }
-    update(gameloop) {
-        if (this.scoreLeft <= 0 || this.scoreRight <= 0) {
+    pause () {
+        if (this.paused == 0) {
+            this.Pause.style.display = "block"
             cancelAnimationFrame(gameloop)
-            console.log(this.scoreLeft)
+            this.paused = 1
+        } else {
+            this.Pause.style.display = "none"
+            requestAnimationFrame(gameLoop)
+            this.paused = 0
+        }
+    }
+    reload () {
+        window.location.reload(true)
+    } 
+    update(gameloop) {
+        if (this.scoreL < this.scoreR) {
+            this.tex2.style.display = "block"
+        } else {
+            this.tex1.style.display = "block"
+        }
+        if (this.scoreLeft <= 0 || this.scoreRight <= 0) {
+            this.scoreLe.innerHTML = this.scoreL.innerHTML
+            this.scoreRe.innerHTML = this.scoreR.innerHTML
+            this.dScreen.style.display = "block"
+            cancelAnimationFrame(gameloop)
         }
     }
 }
@@ -285,13 +321,13 @@ class player2 {
 }
 
 class enemies1 {
-    constructor(ctx, pl1, x, y) {
+    constructor(ctx, e1, x, y, eSize) {
         this.angle = 0
         this.ctx = ctx
-        this.pl1 = pl1
+        this.e1 = e1
         this.x = x
         this.y = y
-        this.size = 25
+        this.size = eSize
         this.velX = 0
         this.velY = 0
     }
@@ -300,7 +336,7 @@ class enemies1 {
         this.ctx.translate(this.x + (this.size / 2), this.y + (this.size / 2))
         this.ctx.rotate(this.angle + 1.5)
         this.ctx.translate(-(this.x + (this.size / 2)), -(this.y + (this.size / 2)))
-        this.ctx.drawImage(this.pl1, this.x, this.y, this.size, this.size)
+        this.ctx.drawImage(this.e1, this.x, this.y, this.size, this.size)
         this.ctx.rotate(this.angle + 1.5)
         this.ctx.restore()
     }
@@ -320,13 +356,13 @@ class enemies1 {
 }
 
 class enemies2 {
-    constructor(ctx, pl2, x, y) {
+    constructor(ctx, e2, x, y, eSize) {
         this.angle = 0
         this.ctx = ctx
-        this.pl2 = pl2
+        this.e2 = e2
         this.x = x
         this.y = y
-        this.size = 25
+        this.size = eSize
         this.velX = 0
         this.velY = 0
         this.enemyDist = 0
@@ -336,7 +372,7 @@ class enemies2 {
         this.ctx.translate(this.x + (this.size / 2), this.y + (this.size / 2))
         this.ctx.rotate(this.angle + 1.5)
         this.ctx.translate(-(this.x + (this.size / 2)), -(this.y + (this.size / 2)))
-        this.ctx.drawImage(this.pl2, this.x, this.y, this.size, this.size)
+        this.ctx.drawImage(this.e2, this.x, this.y, this.size, this.size)
         this.ctx.rotate(this.angle + 1.5)
         this.ctx.restore()
     }
@@ -345,12 +381,6 @@ class enemies2 {
             (playerTwo.y + (playerTwo.pSize / 4)) - this.y,
             (playerTwo.x + (playerTwo.pSize / 4)) - this.x
         )
-        this.enemyDist = Math.hypot(playerTwo.x - this.x, playerTwo.y - this.y)
-            // if(enemyDist < 10) {
-            //     setTimeout(() => {
-            //         enemiesT.splice(enemyIndex, 1)
-            //     }, 0)
-            // }
         this.draw()
         this.vel = {
             x: Math.cos(this.angle),
@@ -361,7 +391,7 @@ class enemies2 {
     }
 }
 
-function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, wc, sh, Game) {
+function enemyControllerL(ctx, EnemyBlue, enemiesO, playerOne, enemyTimer, bullets1, wc, sh, Game, eSize) {
     x = 0
     y = 0
     if (Math.random() < 0.5) {
@@ -372,7 +402,7 @@ function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets
         y = Math.random() < 0.5 ? 0 - 17.5 : canvas.height + 17.5      
     }
     if(enemyTimer > 1) {
-        enemiesO.push(new enemies1(ctx, Player1, x, y, playerOne))
+        enemiesO.push(new enemies1(ctx, EnemyBlue, x, y, eSize))
     }
 
     enemiesO.forEach((enemies1, enemyIndex) => {
@@ -404,7 +434,7 @@ function enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets
     })
 }
 
-function enemyControllerR(ctx, Player2, enemiesT, playerTwo, enemyTimer, bullets2, wc, sh, Game) {
+function enemyControllerR(ctx, EnemyRed, enemiesT, playerTwo, enemyTimer, bullets2, wc, sh, Game, eSize) {
     x = 0
     y = 0
     if (Math.random() < 0.5) {
@@ -415,7 +445,7 @@ function enemyControllerR(ctx, Player2, enemiesT, playerTwo, enemyTimer, bullets
         y = Math.random() < 0.5 ? 0 - 17.5 : canvas.height + 17.5      
     }
     if(enemyTimer > 1) {
-        enemiesT.push(new enemies2(ctx, Player2, x, y, playerTwo))
+        enemiesT.push(new enemies2(ctx, EnemyRed, x, y, eSize))
     }
 
     enemiesT.forEach((enemies2, enemyIndex) => {
@@ -500,6 +530,14 @@ class inputs {
 
                 case 190:
                     playerMove2.rotateR()
+                    break;
+
+                case 27:
+                    Game.pause()
+                    break;
+
+                case 82:
+                    Game.reload()
                     break;
                 }
         })
@@ -638,20 +676,18 @@ function deathController(enemiesO, enemiesT, playerOne, playerTwo, Game) {
 //Make the classes and set inputs
 playerOne = new player1(pSize, Player1, ctx, widthQuarter, innerHeight, widthCenter, heightCenter, playerMov1)
 playerTwo = new player2(pSize, Player2, ctx, widthQuarter, innerHeight, widthCenter, heightCenter, playerMov2)
-new inputs(playerOne, playerTwo)
 //For Left Canvas
-enemiesOne = new enemies1(ctx, Player1)
-enemiesTwo = new enemies2(ctx, Player2)
+enemiesOne = new enemies1(ctx, EnemyBlue)
+enemiesTwo = new enemies2(ctx, EnemyRed)
 ui = new UI(ctx, innerHeight, widthQuarter, widthCenter, innerWidth)
-Game = new game(scoreL, scoreR, enemiesO, enemiesT, playerOne, playerTwo, enemiesOne, enemiesTwo)
-
+Game = new game(scoreL, scoreR, scoreLe, scoreRe, dScreen, tex1, tex2, pause)
+new inputs(playerOne, playerTwo, Game)
 //Game Loop
 let lastTime = 0
 function gameLoop(timestamp) {
     gameloop = requestAnimationFrame(gameLoop)
     let deltaTime = timestamp - lastTime
     lastTime = timestamp
-
     ctx.clearRect(0, 0, innerWidth, innerHeight)
     playerOne.update(deltaTime)
     playerTwo.update(deltaTime)
@@ -661,8 +697,8 @@ function gameLoop(timestamp) {
     Game.update(gameloop)
     enemyTimer = enemyTimer + 0.02
     deathController(enemiesO, enemiesT, playerOne, playerTwo, Game)
-    enemyControllerL(ctx, Player1, enemiesO, playerOne, enemyTimer, bullets1, widthCenter, innerHeight, Game)
-    enemyControllerR(ctx, Player2, enemiesT, playerTwo, enemyTimer, bullets2, widthCenter, innerHeight, Game)
+    enemyControllerL(ctx, EnemyBlue, enemiesO, playerOne, enemyTimer, bullets1, widthCenter, innerHeight, Game, eSize)
+    enemyControllerR(ctx, EnemyRed, enemiesT, playerTwo, enemyTimer, bullets2, widthCenter, innerHeight, Game, eSize)
     if(enemyTimer > 1) {
         enemyTimer = 0
     }
